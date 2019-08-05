@@ -1,0 +1,86 @@
+Lab: 以 XPath 找出目標節點
+
+
+
+
+1.	找出目標資料的 XPath
+
+
+1.1	用 Chrome 連接 https://www.taipower.com.tw/TC/news2.aspx?mid=225
+
+
+1.2	滑鼠右鍵點按第一則快訊，從快捷功能表選擇最後一項:「檢查」
+
+
+1.3	滑鼠右鍵點按 <ul> 裏頭的第個 <li>，
+    從快捷功能表選擇「Copy」|「Copy XPath」。
+
+
+1.4	貼入內容到本文件，應該會類似這樣:
+//*[@id="news_box3"]/div[2]/ul/li[1]
+
+1.5	去掉最後的 [1]，稍後我們會用到這段語法:
+//*[@id="news_box3"]/div[2]/ul/li
+
+
+
+
+2.  利用 cURL 抓回網頁
+
+
+2-1 在本資料夾建立一個新的 php 檔案，
+    檔名: getNews.php，內容如下:
+    
+<?php
+header("content-type: text/html; charset=utf-8");
+
+// 1. 初始設定
+$ch = curl_init();
+
+// 2. 設定 / 調整參數
+curl_setopt($ch, CURLOPT_URL, "https://www.taipower.com.tw/TC/news2.aspx?mid=225");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_HEADER, 0);
+
+// 3. 執行，取回 response 結果
+$pageContent = curl_exec($ch);
+
+// 4. 關閉與釋放資源
+curl_close($ch);
+
+echo htmlspecialchars($pageContent);
+
+?>
+
+
+1-2 執行試用 getNews.php。
+
+
+
+
+3.  以 DOMDocument, DOMXPath 解讀網頁內容
+
+
+3-1 去除 echo htmlspecialchars($pageContent); 這行，
+    換成下列寫法:
+
+$doc = new DOMDocument();
+libxml_use_internal_errors(true);
+$doc->loadHTML($pageContent);
+
+$xpath = new DOMXPath($doc);
+$entries = $xpath->query('//*[@id="news_box3"]/div[2]/ul/li');
+foreach ($entries as $entry) 
+{
+    $title = $xpath->query("./a/div/h3", $entry);
+    echo "Title：" . $title->item(0)->nodeValue . "<br>";
+}
+
+
+3-2 執行試用 getNews.php
+
+
+3-3 上述程式使用什麼物件解析 HTML 文件?
+
+
+3-4 請試著描述 DOMXPath 如何以絕對路徑/相對路徑找出目標節點。

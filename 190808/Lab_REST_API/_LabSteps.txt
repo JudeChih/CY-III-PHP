@@ -1,0 +1,341 @@
+Lab: 一個簡單但可以運作的 REST API
+
+<Note> 一個結構儘可能簡單但可以運作的 REST API
+
+
+
+1.  路由設定與測試
+
+
+1.1 新建一個名為 api 的資料夾
+
+
+1.2 滑鼠右鍵點按 api 資料夾， New File，
+    檔名: .htaccess，檔案內容:
+
+RewriteEngine on
+RewriteRule ^(.*)$ api.php?url=$1 [QSA,L]
+
+
+<Note>
+    上述兩行的作用，在於將所有的請求都導向 api.php
+    而原本的路徑內容，都以 url 參數傳進 api.php
+
+
+1.3 在 api 資料夾建立一個新的 PHP 檔案，
+    檔名: api.php，程式內容如下:
+
+<?php
+// 一個簡單但可以運作的 REST API，
+
+$method = $_SERVER['REQUEST_METHOD'];
+$url = explode("/", rtrim($_GET["url"], "/") );
+
+switch ($method . " " . $url[0]) {
+    case "GET products":
+        if (isset($url[1]))
+            echo "GET product by id: " . $url[1];
+        else
+            echo "GET products";
+        break;
+    default:
+        echo "Thank you";
+}
+
+?>
+
+
+1.4 確定 Apache 正在執行中，
+    然後，在瀏覽器分別試連下列網址:
+
+http://localhost/專案名稱/Lab_REST_API/api/products/1
+http://localhost/專案名稱/Lab_REST_API/api/products
+例如:
+http://localhost/190720/Lab_REST_API/api/products/1
+http://localhost/190720/Lab_REST_API/api/products
+
+
+
+
+2.  實作資料查詢功能（傳出 JSON 資料給 Client 端）
+
+
+2.1 連接 MySQL 並且執行下列指令以建立本練習專用資料庫:
+
+create database apiDB default character set utf8;
+use apiDB;
+create table products 
+(
+  productId int not null auto_increment primary key,
+  productName varchar(20),
+  price int,
+  quantity int
+);
+insert into products (productName, price, quantity)
+  values ('iPhone', 10000, 1);
+insert into products (productName, price, quantity)
+  values ('iPhone 2', 20000, 2);
+insert into products (productName, price, quantity)
+  values ('iPhone 3', 30000, 3);
+
+
+2.2 修改 api.php，新內容如下:
+
+<?php
+// 一個簡單但可以運作的 REST API，
+// 物件導向與MVC課程時，再來寫進化版
+
+$method = $_SERVER['REQUEST_METHOD'];
+$url = explode("/", rtrim($_GET["url"], "/") );
+
+$dbLink = @mysqli_connect("localhost", "root", "") or die(mysqli_connect_error());
+mysqli_query($dbLink, "set names utf8");
+mysqli_select_db($dbLink, "apiDB");
+
+switch ($method . " " . $url[0]) {
+    case "POST products":
+        echo "creating ...";
+        break;
+    case "GET products":
+        if (isset($url[1]))
+            getProductById($url[1]);
+        else
+            getProducts();
+        break;
+    case "PUT products":
+        echo 'update ...';
+        break;
+    case "DELETE products":
+        echo 'delete ...';
+        break;
+    default:
+        echo "Thank you";
+}
+mysqli_close($dbLink);
+
+
+function getProductById($id) {
+    if (!is_numeric($id))
+    	die( "id is not a number." );
+
+    global $dbLink;
+    $result = mysqli_query($dbLink, 
+      "select * from products where productId = " . $id );
+    $row = mysqli_fetch_assoc($result);
+    echo json_encode($row);
+}
+
+function getProducts() {
+    global $dbLink;
+    $result = mysqli_query($dbLink, 
+      "select * from products");
+    echo "[";
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo json_encode($row);
+    }
+    echo "]";
+}
+
+?>
+
+
+2.3 在瀏覽器分別試連下列網址:
+
+http://localhost/專案名稱/Lab_REST_API/api/products/1
+http://localhost/專案名稱/Lab_REST_API/api/products
+例如:
+http://localhost/190720/Lab_REST_API/api/products/1
+http://localhost/190720/Lab_REST_API/api/products
+
+
+
+
+3.  繼續完成 CRUD 功能
+
+
+3.1 修改 api.php，新內容如下:
+
+<?php
+// 一個簡單但可以運作的 REST API，
+// 物件導向與MVC課程時，再來寫進化版
+
+$method = $_SERVER['REQUEST_METHOD'];
+$url = explode("/", rtrim($_GET["url"], "/") );
+
+$dbLink = @mysqli_connect("localhost", "root", "") or die(mysqli_connect_error());
+mysqli_query($dbLink, "set names utf8");
+mysqli_select_db($dbLink, "apiDB");
+
+switch ($method . " " . $url[0]) {
+    case "POST products":
+        insertProduct();
+        break;
+    case "GET products":
+        if (isset($url[1]))
+            getProductById($url[1]);
+        else
+            getProducts();
+        break;
+    case "PUT products":
+        updateProduct($url[1]);
+        break;
+    case "DELETE products":
+        deleteProduct($url[1]);
+        break;
+    default:
+        echo "Thank you";
+}
+mysqli_close($dbLink);
+
+
+function getProductById($id) {
+    if (!is_numeric($id))
+    	die( "id is not a number." );
+
+    global $dbLink;
+    $result = mysqli_query($dbLink, 
+      "select * from products where productId = " . $id );
+    $row = mysqli_fetch_assoc($result);
+    echo json_encode($row);
+}
+
+
+function getProducts() {
+    global $dbLink;
+    $result = mysqli_query($dbLink, 
+      "select * from products");
+    echo "[";
+    while ($row = mysqli_fetch_assoc($result)) {
+        echo json_encode($row);
+    }
+    echo "]";
+}
+
+
+function insertProduct() {
+    global $dbLink;
+    
+    $productName = $_POST["productName"];
+    $price       = $_POST["price"];
+    $quantity    = $_POST["quantity"];
+    $commandText = 
+        "insert into products "
+      . "set productName = '{$productName}' "
+      . "  , price       = '{$price}'"
+      . "  , quantity    = '{$quantity}'";
+    $result = mysqli_query($dbLink, $commandText); 
+    
+    echo $result;
+}
+
+
+function updateProduct($id) {
+    if (! isset ( $id ))
+    	die ( "Parameter id not found." );
+    if (! is_numeric ( $id ))
+        die ( "id not a number." );
+
+    global $dbLink;
+    
+    parse_str(file_get_contents('php://input'), $putData);
+    //echo json_encode($putData);
+    //return;
+    $productName = $putData["productName"];
+    $price       = $putData["price"];
+    $quantity    = $putData["quantity"];
+    $commandText = 
+        "update products "
+      . "set productName = '{$productName}' "
+      . "  , price       = '{$price}'"
+      . "  , quantity    = '{$quantity}'"
+      . "  where productId = {$id}";
+    mysqli_query($dbLink, $commandText); 
+    
+    echo "Updated: " . $id;
+}
+
+
+function deleteProduct($id) {
+    if (! isset ( $id ))
+    	die ( "Parameter id not found." );
+    if (! is_numeric ( $id ))
+        die ( "id not a number." );
+
+    global $dbLink;
+    
+    $commandText = 
+        "delete from products "
+      . "  where productId = {$id}";
+    mysqli_query($dbLink, $commandText); 
+    
+    echo "Deleted: " . $id;
+}
+
+?>
+
+
+3.2 在 api "以外的"資料夾新建一個網頁: testForm.html，
+    內容如下:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lab</title>
+    <script src="jquery-1.9.1.min.js"></script>
+</head>
+<body>
+    <form method="post" action="/api/products">
+        <h1>新增資料</h1>
+        Product name: <input type="text" name="productName"><br>
+        Price: <input type="text" name="price"><br>
+        Quantity: <input type="text" name="quantity"><br>
+        <input type="submit" name="postButton" value="POST" >
+    </form>
+    <hr>
+    <input type="button" id="putButton" value="test put (update)">
+    |
+    <input type="button" id="deleteButton" value="test delete">
+    
+    <script>
+    
+        $("#putButton").click(function () {
+            var productData = {
+                productName: "iPhone 1",
+                price: 10001,
+                quantity: 11
+            };
+            $.ajax({
+                type: "put",
+                url: "/api/products/1",
+                data: productData
+            }).then(function (e) {
+                $("#putButton").val(e);
+            });
+        });
+        
+        $("#deleteButton").click(function () {
+            $.ajax({
+                type: "delete",
+                url: "/api/products/3"
+            }).then(function (e) {
+                $("#deleteButton").val(e);
+            })
+        })
+        
+        
+
+        
+    </script>
+</body>
+</html>
+
+
+3.3 替換所有的「/api/products」，全面改成:
+http://localhost/專案名稱/Lab_REST_API/api/products
+例如:
+http://localhost/190720/Lab_REST_API/api/products
+
+
+
+3.4 在瀏覽器測試 testForm.html 的資料增刪功能

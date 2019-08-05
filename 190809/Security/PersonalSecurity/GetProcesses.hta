@@ -1,0 +1,54 @@
+
+<head>
+<title>HTA Test</title>
+<HTA:APPLICATION 
+     APPLICATIONNAME="HTA Test"
+     SCROLL="yes"
+     SINGLEINSTANCE="yes"
+>
+</head>
+
+<script language="VBScript">
+    Sub GetOSVersion
+        strComputer = "."
+        Set objWMIService = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+
+        Set colOperatingSystems = objWMIService.ExecQuery _
+            ("Select * from Win32_OperatingSystem")
+
+        For Each objOperatingSystem in colOperatingSystems
+            DataArea.InnerHTML = objOperatingSystem.Caption & " " & _
+                objOperatingSystem.Version
+        Next
+
+    End Sub
+
+Sub GetProcesses
+
+    strComputer = "."
+    Set objWMIService = GetObject("winmgmts:\\" & strComputer & _
+        "\root\cimv2")
+    Set colProcesses = objWMIService.ExecQuery("Select * From Win32_Process")
+    strHTML = "<table border='1' style='border-collapse: collapse' "  & _
+        "bordercolor='#111111' width='100%' id='Table1' >"
+
+    For Each objProcess in colProcesses
+        strHTML = strHTML & "<tr>"
+        strHTML = strHTML & "<td width='50%'>" & objProcess.Name & "</td>"
+        strHTML = strHTML & "<td width='50%'>" & objProcess.ProcessID & _
+            "</td>"
+    Next
+
+    strHTML = strHTML & "</table>"
+    DataArea.InnerHTML = strHTML
+
+End Sub
+
+
+</script>
+
+<body>
+<input type="button" value="Get Processes" name="run_button" onClick="GetProcesses">
+<p>
+<span id = "DataArea"></span>
+</body>

@@ -1,0 +1,189 @@
+Lab: Client 與 Server 透過 WebSocket 雙向即時連線
+
+
+
+
+1.  下載 PHP-Websockets 函式庫
+
+
+1.1 連到 https://github.com/ghedipunk/PHP-WebSockets
+    點按 Download Zip 下載 PHP-Websockets 函式庫 
+
+    
+1.2 解壓縮 ZIP 檔，複製 websockets.php 到本工作目錄。
+
+
+1.2 複製 users.php 到本工作目錄。
+
+
+
+
+2.  建立 WebSocket 伺服端程式
+
+
+2.0	以記事本開啟 C:\xampp\php\php.ini，搜尋 ;extension=sockets
+	將開頭的 ; 註解字元去除:
+extension=sockets
+
+
+2.1 在 Lab_WebSocket 資料夾建立一個新的 PHP 檔案，
+    檔名: WebSocket_Server.php，內容如下:
+
+<?php
+require_once ('./websockets.php');
+class EchoServer extends WebSocketServer {
+    protected function process($user, $message) {
+        echo "got message: $message \r\n";
+        $this->send ( $user, $message );
+    }
+    protected function connected($user) {
+    }
+    protected function closed($user) {
+    }
+}
+
+$echo = new EchoServer ( "0.0.0.0", "9000" );
+
+try {
+    $echo->run ();
+} catch ( Exception $e ) {
+    $echo->stdout ( $e->getMessage () );
+}
+
+?>
+
+
+2.2 滑鼠右鍵 Lab_WebSocket 資料夾 | Open in Terminal
+
+
+2.3 繼續輸入下列指令，以 PHP 執行 WebSocket_Server.php
+    php WebSocket_Server.php
+
+<Note>如果出現防火牆通知，請允許通過。
+
+
+3.  建立 WebSocket 用戶端程式
+
+
+3.1 在 Lab_WebSocket 資料夾建立一個新的 PHP 檔案，
+    檔名: WebSocket_Client.php，內容如下:
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+    <input type="text" id="txt">
+    <input type="button" id="btnSend" value="Send">
+    <hr>
+    <div id="debug"></div>
+
+    <script>
+        function log(msg) {
+            document.getElementById("debug").innerHTML += msg + "<br>";
+        }
+        
+         
+        
+    </script>
+
+
+</body>
+</html>
+
+
+3.2 繼續在 Script 區塊寫作程式建立 WebSocket 物件，建立 WebSocket 物件時，傳入的 WebSocket 網址:
+    ws://127.0.0.1:9000
+    
+        var host = "ws://127.0.0.1:9000";
+        var socket = new WebSocket(host);
+
+
+3.3 寫作 WebSocket 物件的 onopen、onmessage、onclose 事件處理函式:
+
+        socket.onopen = function(msg) {
+            log("Welcome - status "+this.readyState);
+        };
+
+        socket.onmessage = function(msg) {
+            log("Received: "+msg.data);
+        };
+
+        socket.onclose = function(msg) {
+            log("Disconnected - status " + this.readyState);
+        };
+
+
+3.4 寫作 btnSend 的  onclick 事件處理函式:
+
+        document.getElementById("btnSend").onclick = function (e) {
+            var s = document.getElementById("txt").value;
+            log("Sending message: " + s);
+            socket.send(s);
+        }
+
+
+3.5 測試Client端程式，輸入文字後，點按 Send 按鈕。
+
+
+3.6 修改 C:\Windows\System32\drivers\etc\hosts，加入 
+    www.beauty.com 與 www.monster.com 模擬 DNS 設定，例如:
+    
+127.0.0.1 www.beauty.com
+127.0.0.1 www.monster.com
+
+
+3.7 修改程式，將 host 變數改成:
+    var host = "ws://www.beauty.com:9000";
+
+
+
+<Note>完整的 WebSocket_Client.php 內容如下:
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+    <input type="text" id="txt">
+    <input type="button" id="btnSend" value="Send">
+    <hr>
+    <div id="debug"></div>
+
+    <script>
+        function log(msg) {
+            document.getElementById("debug").innerHTML += msg + "<br>";
+        }
+        
+        // var host = "ws://www.beauty.com:9000";
+        var host = "ws://127.0.0.1:9000";
+        var socket = new WebSocket(host);
+
+        socket.onopen = function(msg) {
+            log("Welcome - status "+this.readyState);
+        };
+
+        socket.onmessage = function(msg) {
+            log("Received: "+msg.data);
+        };
+
+        socket.onclose = function(msg) {
+            log("Disconnected - status " + this.readyState);
+        };
+
+        document.getElementById("btnSend").onclick = function (e) {
+            var s = document.getElementById("txt").value;
+            log("Sending message: " + s);
+            socket.send(s);
+        }
+    </script>
+
+</body>
+</html>
+

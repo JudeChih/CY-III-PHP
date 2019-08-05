@@ -1,0 +1,383 @@
+Lab: PHP MVC Web Application 
+
+
+<Note> 
+建議滑鼠右鍵點按 c:\xampp\htdocs | Open with Code
+直接將工作環境設定在 c:\xampp\htdocs 資料夾
+
+
+1.0 在 c:\xampp\htdocs 建立 EasyMVC 資料夾
+
+
+
+
+2.  建立目錄架構
+
+
+2.1 滑鼠右鍵點按 EasyMVC 資料夾 | New Folder，
+    Folder name: controllers
+
+
+2.2 重複上述步驟，繼續建立下列資料夾:
+    + core
+    + models
+    + views
+
+    
+
+
+3.  建立應用程式初步架構
+
+
+3.1 在 core 資料夾建立一個新的 PHP 檔案，
+    檔名: Controller.php，內容如下:
+
+<?php
+
+class Controller {
+    
+
+}
+
+?>
+
+
+3.2 在 core 資料夾建立一個新的 PHP 檔案，
+    檔名: App.php，內容如下:
+
+<?php
+
+class App {
+    
+    public function __construct() {
+        echo "OK";
+    }
+    
+}
+
+?>
+
+
+3.3 在 EasyMVC 資料夾建立一個新的 PHP 檔案，
+    檔名: index.php，程式內容:
+
+<?php
+
+require_once 'core/App.php';
+require_once 'core/Controller.php';
+
+$app = new App();
+
+?>
+
+
+3.4 在瀏覽器輸入下列網址，如果一切順利，畫面會出現 OK 字樣。
+    http://localhost/EasyMVC/
+
+
+
+4.  建立路由（routing）機制
+
+
+4.1 用瀏覽器試連下列網址: (應該會出現錯誤訊息)
+    http://localhost/EasyMVC/ControllerName/MethodName
+
+
+4.2 滑鼠右鍵點按 EasyMVC 資料夾， New File，
+    檔名: .htaccess，檔案內容:
+
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+
+4.3 重新再用瀏覽器測試下列網址: (應該會出現 OK 字樣)
+http://localhost/EasyMVC/ControllerName/MethodName
+
+
+4.4 修改 core/App.php，新的內容如下:
+
+<?php
+
+class App {
+    
+    public function __construct() {
+        $this->parseUrl();
+    }
+    
+    public function parseUrl() {
+        if (isset($_GET["url"])) {
+            echo $_GET["url"];
+        }
+    }
+    
+}
+
+?>
+
+
+4.5 再以瀏覽器測試下列網址: (應該會出現 ControllerName/MethodName 字樣)
+http://localhost/EasyMVC/ControllerName/MethodName
+
+
+4.6 修改 core/App.php，新的內容如下:
+
+<?php
+
+class App {
+    
+    public function __construct() {
+        var_dump($this->parseUrl());
+    }
+    
+    public function parseUrl() {
+        if (isset($_GET["url"])) {
+            $url = rtrim($_GET["url"], "/");
+            $url = explode("/", $url);
+            return $url;
+        }
+    }
+    
+}
+
+?>
+
+
+4.7 再以瀏覽器測試下列網址:
+http://localhost/EasyMVC/ControllerName/MethodName/ParamValue
+(Note: 請對照 var_dump 輸出的內容與網址的對應關係。)
+
+
+
+5.  建構控制器(Controller)
+
+
+5.1 滑鼠右鍵點按 controllers 資料夾， 
+    New File，檔名: HomeController.php，程式內容:
+
+<?php
+
+class HomeController extends Controller {
+    
+    function index() {
+        echo "home page of HomeController";
+    }
+    
+    function hello($name) {
+        echo "Hello! $name";
+    }
+    
+}
+
+?>
+
+
+5.2 請閱讀並且說明上述程式。
+
+
+5.3 修改 core/App.php，將 __construct() 改成這樣:
+
+    public function __construct() {
+        $url = $this->parseUrl();
+        
+        $controllerName = "{$url[0]}Controller";
+        echo $controllerName;
+    }
+    
+<Note>完成後，在瀏覽器以下列網址測試:
+http://localhost/EasyMVC/Home/hello/Chien
+
+
+5.4 繼續修改 core/App.php 的 __construct()建構函式:
+
+    public function __construct() {
+        $url = $this->parseUrl();
+        
+        $controllerName = "{$url[0]}Controller";
+        require_once "controllers/$controllerName.php";
+        $controller = new $controllerName;
+        $methodName = $url[1];
+        echo $methodName;
+        unset($url[0]); unset($url[1]);
+        $params = $url ? array_values($url) : Array();
+        echo "<hr>";
+        var_dump($params);
+    }
+    
+    <Note>完成後，在瀏覽器以下列網址測試:
+    http://localhost/EasyMVC/Home/hello/Chien
+
+
+5.5 繼續修改 core/App.php 的 __construct()建構函式:
+
+    public function __construct() {
+        $url = $this->parseUrl();
+        
+        $controllerName = "{$url[0]}Controller";
+        
+        require_once "controllers/$controllerName.php";
+        $controller = new $controllerName;
+        $methodName = $url[1];
+        unset($url[0]); unset($url[1]);
+        $params = $url ? array_values($url) : Array();
+        call_user_func_array(Array($controller, $methodName), $params);
+    }
+    
+<Note>完成後，在瀏覽器以下列網址測試:
+http://localhost/EasyMVC/Home/hello/Chien
+
+
+5.6 修飾並完成 core/App.php 的 __construct()建構函式:
+
+    public function __construct() {
+        $url = $this->parseUrl();
+        
+        $controllerName = "{$url[0]}Controller";
+        if (!file_exists("controllers/$controllerName.php"))
+            return;
+        require_once "controllers/$controllerName.php";
+        $controller = new $controllerName;
+        $methodName = isset($url[1]) ? $url[1] : "index";
+        if (!method_exists($controller, $methodName))
+            return;
+        unset($url[0]); unset($url[1]);
+        $params = $url ? array_values($url) : Array();
+        call_user_func_array(Array($controller, $methodName), $params);
+    }
+
+
+(Optional)
+5.7 請在 Controllers 資料夾，
+    建立一個叫 BlogController 的控制器並且
+    試用這個控制器，例如:
+http://localhost/EasyMVC/Blog/list/3
+
+
+
+
+6.  Model
+
+
+6.1 滑鼠右鍵點按 models 資料夾， New File，
+    檔名: User.php，程式內容:
+
+<?php
+
+class User {
+    public $name;
+}
+
+?>
+
+
+6.2 修改 core/Controller.php，新版程式如下:
+
+<?php
+
+class Controller {
+    public function model($model) {
+        require_once "models/$model.php";
+        return new $model ();
+    }
+}
+
+?>
+
+
+6.3 修改 controllers/HomeController.php，在 hello 方法使用 Model:
+
+<?php
+
+class HomeController extends Controller {
+    
+    function index() {
+        echo "home page of HomeController";
+    }
+    
+    function hello($name) {
+        $user = $this->model("User");
+        $user->name = $name;
+        echo "Hello! $user->name"; 
+    }
+    
+}
+
+?>
+
+
+6.4 在瀏覽器以下列網址測試:
+http://localhost/EasyMVC/Home/hello/Chien
+    
+    <Note>請想一下 Model 與 Controller 的關係。
+
+
+
+
+7.  繫結模型資料到檢視畫面
+
+
+7.1 滑鼠右鍵點按 Views 資料夾 | New Folder，
+    資料夾名稱: Home
+
+
+7.2 滑鼠右鍵點按 Home 資料夾， New File，
+    檔名: hello.php，網頁內容如下:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Lab</title>
+</head>
+<body>
+    <H1>Hello! <?= $data->name ?></H1>
+</body>
+</html>
+
+
+7.3 修改 core/Controller.php，加入 View 方法，如下:
+
+<?php
+
+class Controller {
+    public function model($model) {
+        require_once "models/$model.php";
+        return new $model ();
+    }
+
+    public function view($view, $data = Array()) {
+        require_once "views/$view.php";
+    }
+
+}
+
+?>
+
+
+7.4 修改 Controllers/HomeController.php，
+    / 呼叫 View() 方法並且傳入 View 的名稱與 Model 資料，如下:
+
+<?php
+
+class HomeController extends Controller {
+    
+    function index() {
+        echo "home page of HomeController";
+    }
+    
+    function hello($name) {
+        $user = $this->model("User");
+        $user->name = $name;
+        $this->view("Home/hello", $user);
+        // echo "Hello! $user->name";
+    }
+    
+}
+
+?>
+
+
+7.5 在瀏覽器以下列網址測試:
+http://localhost/EasyMVC/Home/hello/Chien

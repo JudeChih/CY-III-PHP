@@ -1,0 +1,94 @@
+Lab: Chunked transfer encoding (分塊傳輸編碼)
+
+
+
+
+1.  在本資料夾建立一個新的 PHP 檔案，檔名: LongRequest_Server.php，內容如下:
+
+<?php
+header ( 'Access-Control-Allow-Origin: *' );
+header ( 'Content-Encoding', 'chunked' );
+header ( 'Transfer-Encoding', 'chunked' );
+header ( 'Connection', 'keep-alive' );
+echo " " . "\r\n";
+ob_flush ();
+flush ();
+
+$response = array (
+        "event" => "progress",
+        "data" => 0 
+);
+
+for($i = 1; $i <= 10; $i ++) {
+    sleep ( rand ( 1, 3 ) );
+    $response ["data"] = $i * 10;
+    echo json_encode ( $response ) . "\r\n";
+    ob_flush ();
+    flush ();
+}
+
+?>
+
+
+
+
+2.  執行上述程式，觀察進度依次出現的效果。
+
+
+
+
+3.  在本資料夾建立一個新的 PHP 檔案，檔名: LongRequest_Client.php，內容如下:
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+Test: <input type="text" id="txtTest" />
+<hr>
+<div id="debug"></div>
+
+</body>
+</html>
+
+
+
+
+4.  在 </body>前，置入下列 JavaScript 程式，完成後，執行測試看看:
+
+<script>
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "LongRequest_Server.php", true);
+    xhr.onprogress = function (e) {
+        document.getElementById("debug").innerHTML = xhr.responseText;
+    }
+    xhr.send(null);
+</script>
+
+
+
+
+5.  將上述 JavaScript 程式，修改成這樣:
+
+<script>
+    var data = " \r\n";
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "LongRequest_Server.php", true);
+    xhr.onprogress = function (e) {
+        // document.getElementById("debug").innerHTML = xhr.responseText;
+        responseText = xhr.responseText;
+        lastEvent = responseText.replace(data, "");
+        document.getElementById("debug").innerHTML = lastEvent;
+        data = responseText;
+    }
+    xhr.send(null);
+</script>
+
+
+
+
+(Optional)
+6.  修改程式，將上述的 JSON 字串轉成物件，然後只顯示出進度百分比。
+

@@ -1,0 +1,282 @@
+Lab: PHP 如何使用 cURL 存取動態網頁 
+
+
+
+
+1.  初次試用 cURL
+
+
+1-1 在本資料夾建立一個新的 php 檔案，
+    檔名: test11.php，內容如下:
+    
+<?php
+header("content-type: text/html; charset=utf-8");
+
+// 1. 初始設定
+$ch = curl_init();
+
+// 2. 設定 / 調整參數
+curl_setopt($ch, CURLOPT_URL, "https://tw.appledaily.com/");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_HEADER, 0);
+
+// 3. 執行，取回 response 結果
+$output = curl_exec($ch);
+
+// 4. 關閉與釋放資源
+curl_close($ch);
+
+echo htmlspecialchars($output);
+
+?>
+
+
+1-2 執行試用 test11.php。
+
+
+1-3 請問什麼是 cURL ?
+
+
+1-4 依照上述程式，使用 cURL 主要有哪四道步驟?
+
+
+1-5 請參閱下列文件，並且試著找出剛才我們使用的選項:
+http://us3.php.net/manual/en/function.curl-setopt.php
+
+
+1-6 下列這行，請改其選項值為 1，然後，再試用一遍程式:
+    curl_setopt($ch, CURLOPT_HEADER, 1);
+
+
+1-7 修改程式，如下，完成後，
+    執行程式並且瀏覽 vardump() 輸出的陣列內容。
+
+<?php
+header("content-type: text/html; charset=utf-8");
+
+// 1. 初始設定
+$ch = curl_init();
+
+// 2. 設定 / 調整參數
+curl_setopt($ch, CURLOPT_URL, "https://tw.appledaily.com/");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_HEADER, 0);
+
+// 3. 執行，取回 response 結果
+$output = curl_exec($ch);
+$info = curl_getinfo($ch);
+var_dump($info);
+
+// 4. 關閉與釋放資源
+curl_close($ch);
+
+?>
+
+
+
+
+2.  Location: 重新導向
+
+
+2-1 在本資料夾建立一個新的 php 檔案，
+    檔名: test21.php，內容如下:
+
+<?php
+header("content-type: text/html; charset=utf-8");
+
+// 1. 初始設定
+$ch = curl_init();
+
+// 2. 設定 / 調整參數
+$url = $_SERVER ["SERVER_NAME"] . $_SERVER ["REQUEST_URI"];
+$url = "http://" . 
+    str_replace( basename(__FILE__), "login/secret.php", $url );
+echo $url, "<hr>";
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_HEADER, 1);
+
+// 3. 執行，取回 response 結果
+$output = curl_exec($ch);
+
+// 4. 關閉與釋放資源
+curl_close($ch);
+
+// 報告測試結果
+if (preg_match("!Location: (.*)!i", $output, $matches)) {
+    echo "網站要求重導到 $matches[1]\n";
+} 
+else {
+    echo "不必重導\n";
+}
+echo "<hr>";
+
+echo htmlspecialchars($output);
+
+?>
+
+
+2-2 請觀察上述程式的寫法與執行結果。
+    <Note> 請留意程式有這行:
+    curl_setopt($ch, CURLOPT_HEADER, 1);
+
+
+2-3 瀏覽一下 login 資料夾的程式，
+    為何 secret.php 會要求重新導向?
+
+
+2-4 上述程式如何製作出相對路徑網址?
+
+
+2-5 preg_match() 函式的功能是什麼?
+
+
+
+
+3.  POST 資料以取得執行結果
+
+
+3-1 在本資料夾建立一個新的 php 檔案，
+    檔名: test31.php，內容如下:
+
+<?php
+header("content-type: text/html; charset=utf-8");
+
+// 表單資料
+$postData = array (
+    "txtUserName" => "Chien",
+    "txtPassword" => "password",
+    "btnOK" => "OK"
+);
+
+// 1. 初始設定
+$ch = curl_init();
+
+// 2. 設定 / 調整參數
+$url = $_SERVER ["SERVER_NAME"] . $_SERVER ["REQUEST_URI"];
+$url = "http://" . 
+    str_replace( basename(__FILE__), "login/login.php", $url );
+echo $url, "<hr>";
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_HEADER, 1);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+
+// 3. 執行，取回 response 結果
+$output = curl_exec($ch);
+
+// 4. 關閉與釋放資源
+curl_close($ch);
+
+// 報告測試結果
+if (preg_match("!Location: (.*)!i", $output, $matches)) {
+    echo "網站要求重導到 $matches[1]\n";
+} 
+else {
+    echo "不必重導\n";
+}
+echo "<hr>";
+
+echo htmlspecialchars($output);
+
+?>
+
+
+3-3 請觀察上述程式的寫法與執行結果。
+
+
+3-4 與之前的程式相比，curl_setopt() 額外多設了哪兩個參數?
+
+
+3-5 請對照一下 $postData 陣列的 key 與 login.php 表單欄位名稱。
+
+
+
+
+4.  存取 Cookie
+
+
+4-1 在本資料夾建立一個新的 php 檔案，
+    檔名: test41.php，內容如下:
+
+<?php
+header("content-type: text/html; charset=utf-8");
+
+// 1. 初始設定
+$ch = curl_init();
+
+// 2. 登入
+$url = $_SERVER ["SERVER_NAME"] . $_SERVER ["REQUEST_URI"];
+$url = "http://" . 
+    str_replace( basename(__FILE__), "login/login.php", $url );
+echo $url, "<hr>";
+
+$postData = array (
+    "txtUserName" => "Chien",
+    "txtPassword" => "password",
+    "btnOK" => "OK"
+);
+
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_HEADER, 1);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+// CURLOPT_COOKIEJAR 指定如何接收儲存 Cookie
+curl_setopt($ch, CURLOPT_COOKIEJAR, "cookie.txt");
+// CURLOPT_COOKIEFILE: 打算送出給 Server 的 Cookie 放在哪裏
+curl_setopt($ch, CURLOPT_COOKIEFILE, "cookie.txt");
+
+$output = curl_exec($ch);
+
+
+// 3. 瀏覽會員專用網頁: secret.php
+$url = $_SERVER ["SERVER_NAME"] . $_SERVER ["REQUEST_URI"];
+$url = "http://" . 
+    str_replace( basename(__FILE__), "login/secret.php", $url );
+echo $url, "<hr>";
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_HEADER, 1);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+// CURLOPT_COOKIEJAR 指定如何接收儲存 Cookie
+curl_setopt($ch, CURLOPT_COOKIEJAR, "cookie.txt");
+// CURLOPT_COOKIEFILE: 打算送出給 Server 的 Cookie 放在哪裏
+curl_setopt($ch, CURLOPT_COOKIEFILE, "cookie.txt");
+
+$output = curl_exec($ch);
+
+// 4. 關閉與釋放資源
+curl_close($ch);
+
+
+// 報告測試結果
+if (preg_match("!Location: (.*)!i", $output, $matches)) {
+    echo "網站要求重導到 $matches[1]\n";
+} 
+else {
+    echo "不必重導\n";
+}
+echo "<hr>";
+
+echo htmlspecialchars($output);
+
+?>
+
+
+4-2 請觀察上述程式的寫法與執行結果。
+
+
+4-3 請留意本資料夾在程式執行之後，多出一個 cookie.txt 檔
+
+
+4-4 請問上述程式指定了哪兩項與 Cookie 的參數?
+    它們的作用是什麼?
+
+// CURLOPT_COOKIEJAR 指定如何接收儲存 Cookie
+curl_setopt($ch, CURLOPT_COOKIEJAR, "cookie.txt");
+// CURLOPT_COOKIEFILE: 打算送出給 Server 的 Cookie 放在哪裏
+curl_setopt($ch, CURLOPT_COOKIEFILE, "cookie.txt");
+

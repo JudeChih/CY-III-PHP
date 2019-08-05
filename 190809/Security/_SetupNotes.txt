@@ -1,0 +1,20 @@
+﻿0.	本次示範環境為 WAMP
+
+
+1.	修改 C:\Windows\System32\drivers\etc\hosts
+	加入 www.beauty.com 與 www.monster.com 模擬 DNS 設定
+	例如:
+127.0.0.1 www.beauty.com
+127.0.0.1 www.monster.com
+
+
+2. 	執行 SetupDB.txt 以備妥 securityLab 資料庫結構與測試資料
+
+
+3.	視需要修改 config.php 的設定值，例如:密碼。
+
+
+4.	將 Lab 資料夾移到 c:\xampp\htdocs 資料夾之下
+
+
+其他問題，請洽詢錢達智老師（E-mail: wolfgang.chien@gmail.com）
