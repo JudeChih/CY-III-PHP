@@ -1,0 +1,36 @@
+【課堂討論與問答】
+
+
+1.  Rotation.html 是 Hunter Loftis 的作品。
+    如果是你，會如何寫作/規畫這支程式?
+
+
+2.  The Diamond Solution
+    請看Diamond.png，該如何定義 Copier 呢?
+    
+    
+3.  有篇文章的標題是「如何以 JavaScript 存取 JSON 資料」，
+    請問這篇文章，應該置入下列哪一套資料夾架構?
+    或者有其他的作法呢?
+
+    doc
+     └ JavaScript
+         └ JSON
+        
+    doc
+     └ JSON
+         └ JavaScript
+        
+
+4.   請看 shapes.png，你認為應該怎麼分類比較好?
+
+
+5.  A 提供功能給 B; B 使用 A 的功能。這兩句話是同一件事。
+    請問，下列哪一個箭頭方向是對的? 為什麼?
+
+    A ---> B
+    A <--- B
+
+        
+6.  你怎麼知道客戶說的需求是真的需求呢?
+
