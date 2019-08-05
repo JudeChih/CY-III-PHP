@@ -9,7 +9,9 @@
 <?php 
   // It's PHP code block.
   
-  $x = 3;
+  $x = <<<MultiLines
+  這個範圍裏面都是字串
+  MultiLines;
   
   echo $x;
   
