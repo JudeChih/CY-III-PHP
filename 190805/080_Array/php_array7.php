@@ -9,5 +9,5 @@ $season = array(
     
 print_r($season);
 echo "<hr>";
-var_dump($season);
+var_dump($season); //會顯示陣列的長度或是字串的長度
 ?>

@@ -6,7 +6,7 @@ class CTest
 
 	private $_test;
 	
-	public function __set($varName, $varValue)
+	public function __set($varName, $varValue) //呼叫一個屬性，他不存在的情況下，會執行這個function
 	{
 		echo "__set<br>";
 		echo $varName, ": ", $varValue, "<br>";

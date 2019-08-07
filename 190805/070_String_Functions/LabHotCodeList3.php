@@ -7,8 +7,8 @@ while (!feof($f))
 	$sData .= Trim($line);
 }
 fclose($f);
-//echo $sData;
-
+echo $sData;
+echo "<hr>";
 // GetHotCodeList
 $result = "01234567890";
 $iLen = strlen($sData);
