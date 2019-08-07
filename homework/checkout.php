@@ -1,3 +1,19 @@
+<?php 
+if(isset($_GET['clear'])){
+	setcookie('userdata',null,time() - 24 * 60 * 60 * 60);
+	setcookie('cart',null,time() - 24 * 60 * 60 * 60);
+	header("Location: login.php");
+	exit();
+}
+
+
+if(isset($_COOKIE['userdata'])){
+	$cart = json_decode($_COOKIE['cart']);
+}else{
+	header("Location: login.php");
+	exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -39,19 +55,21 @@
 		<!-- HEADER -->
 		<header>
 			<!-- TOP HEADER -->
-			<div id="top-header">
-				<div class="container">
-					<ul class="header-links pull-left">
-						<li><a href="#"><i class="fa fa-phone"></i> +021-95-51-84</a></li>
-						<li><a href="#"><i class="fa fa-envelope-o"></i> email@email.com</a></li>
-						<li><a href="#"><i class="fa fa-map-marker"></i> 1734 Stonecoal Road</a></li>
-					</ul>
-					<ul class="header-links pull-right">
-						<li><a href="#"><i class="fa fa-dollar"></i> USD</a></li>
-						<li><a href="#"><i class="fa fa-user-o"></i> My Account</a></li>
-					</ul>
+			<?php if(isset($_COOKIE['userdata'])): ?>
+				<div id="top-header">
+					<div class="container">
+						<ul class="header-links pull-left">
+							<li><a href="#"><i class="fa fa-phone"></i> +123-45-67-89</a></li>
+							<li><a href="#"><i class="fa fa-envelope-o"></i> toby@gmail.com</a></li>
+							<li><a href="#"><i class="fa fa-map-marker"></i> 台中市公益路二段 </a></li>
+						</ul>
+						<ul class="header-links pull-right">
+							<li><a href="#"><i class="fa fa-dollar"></i> TWD</a></li>
+							<li><a href="#"><i class="fa fa-user-o"></i> My Account</a></li>
+						</ul>
+					</div>
 				</div>
-			</div>
+			<?php endif;?>
 			<!-- /TOP HEADER -->
 
 			<!-- MAIN HEADER -->
@@ -63,7 +81,7 @@
 						<!-- LOGO -->
 						<div class="col-md-3">
 							<div class="header-logo">
-								<a href="#" class="logo">
+								<a href="index.php" class="logo">
 									<img src="./img/logo.png" alt="">
 								</a>
 							</div>
@@ -72,17 +90,7 @@
 
 						<!-- SEARCH BAR -->
 						<div class="col-md-6">
-							<div class="header-search">
-								<form>
-									<select class="input-select">
-										<option value="0">All Categories</option>
-										<option value="1">Category 01</option>
-										<option value="1">Category 02</option>
-									</select>
-									<input class="input" placeholder="Search here">
-									<button class="search-btn">Search</button>
-								</form>
-							</div>
+							
 						</div>
 						<!-- /SEARCH BAR -->
 
@@ -91,11 +99,6 @@
 							<div class="header-ctn">
 								<!-- Wishlist -->
 								<div>
-									<a href="#">
-										<i class="fa fa-heart-o"></i>
-										<span>Your Wishlist</span>
-										<div class="qty">2</div>
-									</a>
 								</div>
 								<!-- /Wishlist -->
 
@@ -104,41 +107,41 @@
 									<a class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
 										<i class="fa fa-shopping-cart"></i>
 										<span>Your Cart</span>
-										<div class="qty">3</div>
+										<?php if(isset($cart)):?>
+											<div class="qty"><?php $items = 0;foreach ($cart as $cc) $items += $cc->num; echo $items; ?></div>
+										<?php else :?>
+											<div class="qty">0</div>
+										<?php endif;?>
+
 									</a>
 									<div class="cart-dropdown">
+										<?php if(isset($cart)):?>
 										<div class="cart-list">
+											<?php foreach ($cart as $dd) : ?>
 											<div class="product-widget">
 												<div class="product-img">
-													<img src="./img/product01.png" alt="">
+													<img src="./img/<?= $dd->pd_image ?>" alt="">
 												</div>
 												<div class="product-body">
-													<h3 class="product-name"><a href="#">product name goes here</a></h3>
-													<h4 class="product-price"><span class="qty">1x</span>$980.00</h4>
+													<h3 class="product-name"><a href="product.php?pd_id=<?= $dd->pd_id ?>"><?= $dd->pd_image ?></a></h3>
+													<h4 class="product-price"><span class="qty"><?= $dd->num ?>x</span>$<?= $dd->pd_price ?></h4>
 												</div>
-												<button class="delete"><i class="fa fa-close"></i></button>
+												<button data-id="<?= $dd->pd_id?>" class="delete"><i class="fa fa-close"></i></button>
 											</div>
-
-											<div class="product-widget">
-												<div class="product-img">
-													<img src="./img/product02.png" alt="">
-												</div>
-												<div class="product-body">
-													<h3 class="product-name"><a href="#">product name goes here</a></h3>
-													<h4 class="product-price"><span class="qty">3x</span>$980.00</h4>
-												</div>
-												<button class="delete"><i class="fa fa-close"></i></button>
-											</div>
+											<?php endforeach; ?>
 										</div>
 										<div class="cart-summary">
-											<small>3 Item(s) selected</small>
-											<h5>SUBTOTAL: $2940.00</h5>
+											<small><?php $items = 0;foreach ($cart as $cc) $items += $cc->num; echo $items; ?> Item(s) selected</small>
+											<h5>SUBTOTAL: $<?php $total = 0;foreach ($cart as $cc) $total += $cc->num * $cc->pd_price; echo $total; ?></h5>
 										</div>
 										<div class="cart-btns">
 											<a href="#">View Cart</a>
-											<a href="#">Checkout  <i class="fa fa-arrow-circle-right"></i></a>
+											<a href="checkout.php">Checkout  <i class="fa fa-arrow-circle-right"></i></a>
 										</div>
 									</div>
+									<?php else :?>
+										尚未選擇任何商品
+									<?php endif;?>
 								</div>
 								<!-- /Cart -->
 
@@ -162,30 +165,6 @@
 		</header>
 		<!-- /HEADER -->
 
-		<!-- NAVIGATION -->
-		<nav id="navigation">
-			<!-- container -->
-			<div class="container">
-				<!-- responsive-nav -->
-				<div id="responsive-nav">
-					<!-- NAV -->
-					<ul class="main-nav nav navbar-nav">
-						<li class="active"><a href="#">Home</a></li>
-						<li><a href="#">Hot Deals</a></li>
-						<li><a href="#">Categories</a></li>
-						<li><a href="#">Laptops</a></li>
-						<li><a href="#">Smartphones</a></li>
-						<li><a href="#">Cameras</a></li>
-						<li><a href="#">Accessories</a></li>
-					</ul>
-					<!-- /NAV -->
-				</div>
-				<!-- /responsive-nav -->
-			</div>
-			<!-- /container -->
-		</nav>
-		<!-- /NAVIGATION -->
-
 		<!-- BREADCRUMB -->
 		<div id="breadcrumb" class="section">
 			<!-- container -->
@@ -195,7 +174,7 @@
 					<div class="col-md-12">
 						<h3 class="breadcrumb-header">Checkout</h3>
 						<ul class="breadcrumb-tree">
-							<li><a href="#">Home</a></li>
+							<li><a href="index.php">Home</a></li>
 							<li class="active">Checkout</li>
 						</ul>
 					</div>
@@ -318,14 +297,12 @@
 								<div><strong>TOTAL</strong></div>
 							</div>
 							<div class="order-products">
+								<?php foreach ($cart as $dd) : ?>
 								<div class="order-col">
-									<div>1x Product Name Goes Here</div>
-									<div>$980.00</div>
+									<div><?= $dd->num ?>x <?= $dd->pd_name ?></div>
+									<div>$<?= $dd->num * $dd->pd_price ?></div>
 								</div>
-								<div class="order-col">
-									<div>2x Product Name Goes Here</div>
-									<div>$980.00</div>
-								</div>
+								<?php endforeach;?>
 							</div>
 							<div class="order-col">
 								<div>Shiping</div>
@@ -333,7 +310,7 @@
 							</div>
 							<div class="order-col">
 								<div><strong>TOTAL</strong></div>
-								<div><strong class="order-total">$2940.00</strong></div>
+								<div><strong class="order-total">$<?php $total = 0;foreach ($cart as $cc) $total += $cc->num * $cc->pd_price; echo $total; ?></strong></div>
 							</div>
 						</div>
 						<div class="payment-method">
@@ -375,7 +352,7 @@
 								I've read and accept the <a href="#">terms & conditions</a>
 							</label>
 						</div>
-						<a href="#" class="primary-btn order-submit">Place order</a>
+						<a href="checkout.php?clear=true" class="primary-btn order-submit">Place order</a>
 					</div>
 					<!-- /Order Details -->
 				</div>
@@ -384,42 +361,6 @@
 			<!-- /container -->
 		</div>
 		<!-- /SECTION -->
-
-		<!-- NEWSLETTER -->
-		<div id="newsletter" class="section">
-			<!-- container -->
-			<div class="container">
-				<!-- row -->
-				<div class="row">
-					<div class="col-md-12">
-						<div class="newsletter">
-							<p>Sign Up for the <strong>NEWSLETTER</strong></p>
-							<form>
-								<input class="input" type="email" placeholder="Enter Your Email">
-								<button class="newsletter-btn"><i class="fa fa-envelope"></i> Subscribe</button>
-							</form>
-							<ul class="newsletter-follow">
-								<li>
-									<a href="#"><i class="fa fa-facebook"></i></a>
-								</li>
-								<li>
-									<a href="#"><i class="fa fa-twitter"></i></a>
-								</li>
-								<li>
-									<a href="#"><i class="fa fa-instagram"></i></a>
-								</li>
-								<li>
-									<a href="#"><i class="fa fa-pinterest"></i></a>
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-				<!-- /row -->
-			</div>
-			<!-- /container -->
-		</div>
-		<!-- /NEWSLETTER -->
 
 		<!-- FOOTER -->
 		<footer id="footer">
@@ -523,7 +464,9 @@
 		<script src="js/slick.min.js"></script>
 		<script src="js/nouislider.min.js"></script>
 		<script src="js/jquery.zoom.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 		<script src="js/main.js"></script>
-
+		<script src="js/toby.js"></script>
+		<?php mysqli_close ( $link ); ?>		
 	</body>
 </html>

@@ -1,3 +1,26 @@
+<?php 
+if(isset($_GET['pd_id'])){
+	$id = $_GET['pd_id'];
+	header("content-type:text/html; charset=utf-8");
+	$link = @mysqli_connect("localhost", "root", "") or die(mysqli_connect_error());
+	mysqli_select_db($link, "toby_store");
+	$commandText = "select * from productdata where pd_id =".$id;
+	$result = mysqli_query($link, $commandText);
+	$row = mysqli_fetch_assoc($result);
+
+	$commandText1 = "select * from productdata where pd_type = '".$row['pd_type']."' Limit 4";
+	$result1 = mysqli_query($link, $commandText1);
+}else{
+	header("Location: index.php");
+	exit();
+}
+
+if(isset($_COOKIE['cart'])){
+	$cart = json_decode($_COOKIE['cart']);
+}
+
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -39,21 +62,23 @@
 		<!-- HEADER -->
 		<header>
 			<!-- TOP HEADER -->
-			<div id="top-header">
-				<div class="container">
-					<ul class="header-links pull-left">
-						<li><a href="#"><i class="fa fa-phone"></i> +123-45-67-89</a></li>
-						<li><a href="#"><i class="fa fa-envelope-o"></i> toby@gmail.com</a></li>
-						<li><a href="#"><i class="fa fa-map-marker"></i> 台中市公益路二段 </a></li>
-					</ul>
-					<ul class="header-links pull-right">
-						<li><a href="#"><i class="fa fa-dollar"></i> TWD</a></li>
-						<li><a href="#"><i class="fa fa-user-o"></i> My Account</a></li>
-					</ul>
+			<?php if(isset($_COOKIE['userdata'])): ?>
+				<div id="top-header">
+					<div class="container">
+						<ul class="header-links pull-left">
+							<li><a href="#"><i class="fa fa-phone"></i> +123-45-67-89</a></li>
+							<li><a href="#"><i class="fa fa-envelope-o"></i> toby@gmail.com</a></li>
+							<li><a href="#"><i class="fa fa-map-marker"></i> 台中市公益路二段 </a></li>
+						</ul>
+						<ul class="header-links pull-right">
+							<li><a href="#"><i class="fa fa-dollar"></i> TWD</a></li>
+							<li><a href="#"><i class="fa fa-user-o"></i> My Account</a></li>
+						</ul>
+					</div>
 				</div>
-			</div>
+			<?php endif;?>
 			<!-- /TOP HEADER -->
-
+			
 			<!-- MAIN HEADER -->
 			<div id="header">
 				<!-- container -->
@@ -63,7 +88,7 @@
 						<!-- LOGO -->
 						<div class="col-md-3">
 							<div class="header-logo">
-								<a href="#" class="logo">
+								<a href="index.php" class="logo">
 									<img src="./img/logo.png" alt="">
 								</a>
 							</div>
@@ -72,17 +97,7 @@
 
 						<!-- SEARCH BAR -->
 						<div class="col-md-6">
-							<div class="header-search">
-								<form>
-									<select class="input-select">
-										<option value="0">All Categories</option>
-										<option value="1">Category 01</option>
-										<option value="1">Category 02</option>
-									</select>
-									<input class="input" placeholder="Search here">
-									<button class="search-btn">Search</button>
-								</form>
-							</div>
+						
 						</div>
 						<!-- /SEARCH BAR -->
 
@@ -91,11 +106,6 @@
 							<div class="header-ctn">
 								<!-- Wishlist -->
 								<div>
-									<a href="#">
-										<i class="fa fa-heart-o"></i>
-										<span>Your Wishlist</span>
-										<div class="qty">2</div>
-									</a>
 								</div>
 								<!-- /Wishlist -->
 
@@ -104,41 +114,41 @@
 									<a class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
 										<i class="fa fa-shopping-cart"></i>
 										<span>Your Cart</span>
-										<div class="qty">3</div>
+										<?php if(isset($cart)):?>
+											<div class="qty"><?php $items = 0;foreach ($cart as $cc) $items += $cc->num; echo $items; ?></div>
+										<?php else :?>
+											<div class="qty">0</div>
+										<?php endif;?>
+
 									</a>
 									<div class="cart-dropdown">
+										<?php if(isset($cart)):?>
 										<div class="cart-list">
+											<?php foreach ($cart as $dd) : ?>
 											<div class="product-widget">
 												<div class="product-img">
-													<img src="./img/product01.png" alt="">
+													<img src="./img/<?= $dd->pd_image ?>" alt="">
 												</div>
 												<div class="product-body">
-													<h3 class="product-name"><a href="#">product name goes here</a></h3>
-													<h4 class="product-price"><span class="qty">1x</span>$980.00</h4>
+													<h3 class="product-name"><a href="product.php?pd_id=<?= $dd->pd_id ?>"><?= $dd->pd_image ?></a></h3>
+													<h4 class="product-price"><span class="qty"><?= $dd->num ?>x</span>$<?= $dd->pd_price ?></h4>
 												</div>
-												<button class="delete"><i class="fa fa-close"></i></button>
+												<button data-id="<?= $dd->pd_id?>" class="delete"><i class="fa fa-close"></i></button>
 											</div>
-
-											<div class="product-widget">
-												<div class="product-img">
-													<img src="./img/product02.png" alt="">
-												</div>
-												<div class="product-body">
-													<h3 class="product-name"><a href="#">product name goes here</a></h3>
-													<h4 class="product-price"><span class="qty">3x</span>$980.00</h4>
-												</div>
-												<button class="delete"><i class="fa fa-close"></i></button>
-											</div>
+											<?php endforeach; ?>
 										</div>
 										<div class="cart-summary">
-											<small>3 Item(s) selected</small>
-											<h5>SUBTOTAL: $2940.00</h5>
+											<small><?php $items = 0;foreach ($cart as $cc) $items += $cc->num; echo $items; ?> Item(s) selected</small>
+											<h5>SUBTOTAL: $<?php $total = 0;foreach ($cart as $cc) $total += $cc->num * $cc->pd_price; echo $total; ?></h5>
 										</div>
 										<div class="cart-btns">
 											<a href="#">View Cart</a>
-											<a href="#">Checkout  <i class="fa fa-arrow-circle-right"></i></a>
+											<a href="checkout.php">Checkout  <i class="fa fa-arrow-circle-right"></i></a>
 										</div>
 									</div>
+									<?php else :?>
+										尚未選擇任何商品
+									<?php endif;?>
 								</div>
 								<!-- /Cart -->
 
@@ -162,30 +172,6 @@
 		</header>
 		<!-- /HEADER -->
 
-		<!-- NAVIGATION -->
-		<nav id="navigation">
-			<!-- container -->
-			<div class="container">
-				<!-- responsive-nav -->
-				<div id="responsive-nav">
-					<!-- NAV -->
-					<ul class="main-nav nav navbar-nav">
-						<li class="active"><a href="#">Home</a></li>
-						<li><a href="#">Hot Deals</a></li>
-						<li><a href="#">Categories</a></li>
-						<li><a href="#">Laptops</a></li>
-						<li><a href="#">Smartphones</a></li>
-						<li><a href="#">Cameras</a></li>
-						<li><a href="#">Accessories</a></li>
-					</ul>
-					<!-- /NAV -->
-				</div>
-				<!-- /responsive-nav -->
-			</div>
-			<!-- /container -->
-		</nav>
-		<!-- /NAVIGATION -->
-
 		<!-- BREADCRUMB -->
 		<div id="breadcrumb" class="section">
 			<!-- container -->
@@ -194,11 +180,8 @@
 				<div class="row">
 					<div class="col-md-12">
 						<ul class="breadcrumb-tree">
-							<li><a href="#">Home</a></li>
-							<li><a href="#">All Categories</a></li>
-							<li><a href="#">Accessories</a></li>
-							<li><a href="#">Headphones</a></li>
-							<li class="active">Product name goes here</li>
+							<li><a href="index.php">Home</a></li>
+							<li class="active"><?= $row['pd_name'] ?></li>
 						</ul>
 					</div>
 				</div>
@@ -218,19 +201,19 @@
 					<div class="col-md-5 col-md-push-2">
 						<div id="product-main-img">
 							<div class="product-preview">
-								<img src="./img/product01.png" alt="">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
 							</div>
-
 							<div class="product-preview">
-								<img src="./img/product03.png" alt="">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
 							</div>
-
 							<div class="product-preview">
-								<img src="./img/product06.png" alt="">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
 							</div>
-
 							<div class="product-preview">
-								<img src="./img/product08.png" alt="">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
+							</div>
+							<div class="product-preview">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
 							</div>
 						</div>
 					</div>
@@ -240,19 +223,19 @@
 					<div class="col-md-2  col-md-pull-5">
 						<div id="product-imgs">
 							<div class="product-preview">
-								<img src="./img/product01.png" alt="">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
 							</div>
-
 							<div class="product-preview">
-								<img src="./img/product03.png" alt="">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
 							</div>
-
 							<div class="product-preview">
-								<img src="./img/product06.png" alt="">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
 							</div>
-
 							<div class="product-preview">
-								<img src="./img/product08.png" alt="">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
+							</div>
+							<div class="product-preview">
+								<img src="./img/<?= $row['pd_image']?>" alt="">
 							</div>
 						</div>
 					</div>
@@ -264,16 +247,17 @@
 							<h2 class="product-name">product name goes here</h2>
 							<div>
 								<div class="product-rating">
+									<?php for($i = 0 ; $i < $row['pd_star'] ; $i++):?>
 									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
+									<?php endfor;?>
+									<?php for($i = 0 ; $i < 5-$row['pd_star'] ; $i++):?>
 									<i class="fa fa-star-o"></i>
+									<?php endfor;?>
 								</div>
 								<a class="review-link" href="#">10 Review(s) | Add your review</a>
 							</div>
 							<div>
-								<h3 class="product-price">$980.00 <del class="product-old-price">$990.00</del></h3>
+								<h3 class="product-price">$<?= $row['pd_price']?> <del class="product-old-price">$<?= $row['pd_price'] + 1000?></del></h3>
 								<span class="product-available">In Stock</span>
 							</div>
 							<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
@@ -294,15 +278,8 @@
 							</div>
 
 							<div class="add-to-cart">
-								<div class="qty-label">
-									Qty
-									<div class="input-number">
-										<input type="number">
-										<span class="qty-up">+</span>
-										<span class="qty-down">-</span>
-									</div>
-								</div>
-								<button class="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> add to cart</button>
+								
+								<button data-detail="<?= implode("|",$row) ?>" class="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> add to cart</button>
 							</div>
 
 							<ul class="product-btns">
@@ -563,18 +540,16 @@
 					</div>
 
 					<!-- product -->
+					<?php while ($row1 = mysqli_fetch_assoc($result1)) : ?>
 					<div class="col-md-3 col-xs-6">
 						<div class="product">
 							<div class="product-img">
-								<img src="./img/product01.png" alt="">
-								<div class="product-label">
-									<span class="sale">-30%</span>
-								</div>
+								<img src="./img/<?= $row1['pd_image']?>" alt="">
 							</div>
 							<div class="product-body">
-								<p class="product-category">Category</p>
-								<h3 class="product-name"><a href="#">product name goes here</a></h3>
-								<h4 class="product-price">$980.00 <del class="product-old-price">$990.00</del></h4>
+								<p class="product-category"><?= $row1['pd_type']?></p>
+								<h3 class="product-name"><a href="#"><?= $row1['pd_name']?></a></h3>
+								<h4 class="product-price">$<?= $row1['pd_price']?> <del class="product-old-price">$<?= $row1['pd_price'] + 1000?></del></h4>
 								<div class="product-rating">
 								</div>
 								<div class="product-btns">
@@ -588,140 +563,14 @@
 							</div>
 						</div>
 					</div>
+					<?php endwhile;?>
 					<!-- /product -->
-
-					<!-- product -->
-					<div class="col-md-3 col-xs-6">
-						<div class="product">
-							<div class="product-img">
-								<img src="./img/product02.png" alt="">
-								<div class="product-label">
-									<span class="new">NEW</span>
-								</div>
-							</div>
-							<div class="product-body">
-								<p class="product-category">Category</p>
-								<h3 class="product-name"><a href="#">product name goes here</a></h3>
-								<h4 class="product-price">$980.00 <del class="product-old-price">$990.00</del></h4>
-								<div class="product-rating">
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-								</div>
-								<div class="product-btns">
-									<button class="add-to-wishlist"><i class="fa fa-heart-o"></i><span class="tooltipp">add to wishlist</span></button>
-									<button class="add-to-compare"><i class="fa fa-exchange"></i><span class="tooltipp">add to compare</span></button>
-									<button class="quick-view"><i class="fa fa-eye"></i><span class="tooltipp">quick view</span></button>
-								</div>
-							</div>
-							<div class="add-to-cart">
-								<button class="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> add to cart</button>
-							</div>
-						</div>
-					</div>
-					<!-- /product -->
-
-					<div class="clearfix visible-sm visible-xs"></div>
-
-					<!-- product -->
-					<div class="col-md-3 col-xs-6">
-						<div class="product">
-							<div class="product-img">
-								<img src="./img/product03.png" alt="">
-							</div>
-							<div class="product-body">
-								<p class="product-category">Category</p>
-								<h3 class="product-name"><a href="#">product name goes here</a></h3>
-								<h4 class="product-price">$980.00 <del class="product-old-price">$990.00</del></h4>
-								<div class="product-rating">
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star-o"></i>
-								</div>
-								<div class="product-btns">
-									<button class="add-to-wishlist"><i class="fa fa-heart-o"></i><span class="tooltipp">add to wishlist</span></button>
-									<button class="add-to-compare"><i class="fa fa-exchange"></i><span class="tooltipp">add to compare</span></button>
-									<button class="quick-view"><i class="fa fa-eye"></i><span class="tooltipp">quick view</span></button>
-								</div>
-							</div>
-							<div class="add-to-cart">
-								<button class="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> add to cart</button>
-							</div>
-						</div>
-					</div>
-					<!-- /product -->
-
-					<!-- product -->
-					<div class="col-md-3 col-xs-6">
-						<div class="product">
-							<div class="product-img">
-								<img src="./img/product04.png" alt="">
-							</div>
-							<div class="product-body">
-								<p class="product-category">Category</p>
-								<h3 class="product-name"><a href="#">product name goes here</a></h3>
-								<h4 class="product-price">$980.00 <del class="product-old-price">$990.00</del></h4>
-								<div class="product-rating">
-								</div>
-								<div class="product-btns">
-									<button class="add-to-wishlist"><i class="fa fa-heart-o"></i><span class="tooltipp">add to wishlist</span></button>
-									<button class="add-to-compare"><i class="fa fa-exchange"></i><span class="tooltipp">add to compare</span></button>
-									<button class="quick-view"><i class="fa fa-eye"></i><span class="tooltipp">quick view</span></button>
-								</div>
-							</div>
-							<div class="add-to-cart">
-								<button class="add-to-cart-btn"><i class="fa fa-shopping-cart"></i> add to cart</button>
-							</div>
-						</div>
-					</div>
-					<!-- /product -->
-
 				</div>
 				<!-- /row -->
 			</div>
 			<!-- /container -->
 		</div>
 		<!-- /Section -->
-
-		<!-- NEWSLETTER -->
-		<div id="newsletter" class="section">
-			<!-- container -->
-			<div class="container">
-				<!-- row -->
-				<div class="row">
-					<div class="col-md-12">
-						<div class="newsletter">
-							<p>Sign Up for the <strong>NEWSLETTER</strong></p>
-							<form>
-								<input class="input" type="email" placeholder="Enter Your Email">
-								<button class="newsletter-btn"><i class="fa fa-envelope"></i> Subscribe</button>
-							</form>
-							<ul class="newsletter-follow">
-								<li>
-									<a href="#"><i class="fa fa-facebook"></i></a>
-								</li>
-								<li>
-									<a href="#"><i class="fa fa-twitter"></i></a>
-								</li>
-								<li>
-									<a href="#"><i class="fa fa-instagram"></i></a>
-								</li>
-								<li>
-									<a href="#"><i class="fa fa-pinterest"></i></a>
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-				<!-- /row -->
-			</div>
-			<!-- /container -->
-		</div>
-		<!-- /NEWSLETTER -->
 
 		<!-- FOOTER -->
 		<footer id="footer">
@@ -825,7 +674,9 @@
 		<script src="js/slick.min.js"></script>
 		<script src="js/nouislider.min.js"></script>
 		<script src="js/jquery.zoom.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 		<script src="js/main.js"></script>
-
+		<script src="js/toby.js"></script>
+		<?php mysqli_close ( $link ); ?>
 	</body>
 </html>
