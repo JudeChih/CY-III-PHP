@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lab</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js">
+    </script>
+</head>
+<body>
+    <form method="post" action="http://localhost/190808/api/products">
+        <h1>新增資料</h1>
+        Product name: <input type="text" name="productName"><br>
+        Price: <input type="text" name="price"><br>
+        Quantity: <input type="text" name="quantity"><br>
+        <input type="submit" name="postButton" value="POST" >
+    </form>
+    <hr>
+    <input type="button" id="putButton" value="test put (update)">
+    |
+    <input type="button" id="deleteButton" value="test delete">
+    
+    <script>
+    
+        $("#putButton").click(function () {
+            var productData = {
+                productName: "iPhone 1",
+                price: 10001,
+                quantity: 11
+            };
+            $.ajax({
+                type: "put",
+                url: "http://localhost/190808/api/products/1",
+                data: productData
+            }).then(function (e) {
+                $("#putButton").val(e);
+            });
+        });
+        
+        $("#deleteButton").click(function () {
+            $.ajax({
+                type: "delete",
+                url: "http://localhost/190808/api/products/3"
+            }).then(function (e) {
+                $("#deleteButton").val(e);
+            })
+        })
+        
+        
+
+        
+    </script>
+</body>
+</html>

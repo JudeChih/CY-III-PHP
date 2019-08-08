@@ -29,7 +29,7 @@ echo $arrayJson, "<br>";
 
 $obj = json_decode($json);
 echo $obj->price, "<br>";
-// $obj = json_decode($json, true);
+// $obj = json_decode($json, true); //轉成關聯是陣列是true，不要的話就是false
 // echo $obj["price"], "<br>";
 var_dump($obj);
 
