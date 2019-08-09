@@ -19,6 +19,7 @@ if (isset ( $_POST ["btnReadCookie"] )) {
 	}
 }
 
+
 ?>
 
 <!DOCTYPE html>
